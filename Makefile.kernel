@@ -35,7 +35,6 @@ LDFLAGS := -nostdlib -static -z max-page-size=0x1000 -gc-sections -T linker.ld
 
 
 CFILES    := $(shell cd $(SRC) && find -L * -type f -name '*.c' | LC_ALL=C sort)
-RESFILES  := $(addprefix res/,$(shell cd res/ && find -L * -type f -name '*.o' | LC_ALL=C sort))
 NASMFILES := $(shell cd $(SRC) && find -L * -type f -name '*.asm' | LC_ALL=C sort)
 OBJ       := $(addprefix $(BUILD)/,$(CFILES:.c=.c.o) $(NASMFILES:.asm=.asm.o))
 CPPFLAGS  := -I $(SRC) -I $(INCLUDE) \
@@ -60,9 +59,9 @@ $(BUILD)/cc-runtime/cc-runtime.a: $(BUILD)/cc-runtime-old/*
 		CFLAGS="$(CFLAGS)" \
 		CPPFLAGS='-isystem ../../freestnd-c-hdrs-0bsd -DCC_RUNTIME_NO_FLOAT'
 
-$(BUILD)/$(OUTPUT): Makefile linker.ld $(OBJ) $(BUILD)/cc-runtime/cc-runtime.a
+$(BUILD)/$(OUTPUT): Makefile linker.ld $(OBJ) $(BUILD)/cc-runtime/cc-runtime.a res/font.o
 	mkdir -p "$$(dirname $@)"
-	$(LD) $(RESFILES) $(OBJ) $(BUILD)/cc-runtime/cc-runtime.a $(LDFLAGS) -o $@
+	$(LD) $(OBJ) $(BUILD)/cc-runtime/cc-runtime.a res/font.o $(LDFLAGS) -o $@
 
 $(BUILD)/%.c.o: $(SRC)/%.c
 	mkdir -p "$$(dirname $@)"
@@ -71,6 +70,9 @@ $(BUILD)/%.c.o: $(SRC)/%.c
 $(BUILD)/%.asm.o: src/%.asm
 	mkdir -p "$$(dirname $@)"
 	nasm $(NASMFLAGS) $< -o $@
+
+res/font.o: res/font.psfu
+	cd res && objcopy -O elf64-x86-64 -B i386 -I binary font.psfu font.o
 
 clean:
 	rm -rf $(BUILD)/kernel.bin $(BUILD)/iso_root $(BUILD)/kernel.bin.iso init/

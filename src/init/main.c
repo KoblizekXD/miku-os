@@ -72,8 +72,8 @@ void kmain()
     if (LIMINE_BASE_REVISION_SUPPORTED == false) {
         hcf();
     }
-
-    sys_draw(0, 0, 100, 100, SYS_COLOR(255, 0, 0));
+    _sys_csl_init();
+//    sys_draw(0, 0, 100, 100, SYS_COLOR(255, 0, 0));
 
     hcf();
 }

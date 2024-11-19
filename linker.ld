@@ -30,7 +30,8 @@ SECTIONS
 
     .rodata : {
         *(.rodata .rodata.*)
-    } :rodata
+    } : rodata
+
 
     . = ALIGN(CONSTANT(MAXPAGESIZE));
 
