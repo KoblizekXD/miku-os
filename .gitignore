@@ -1,0 +1,8 @@
+ovmf/
+compile_commands.json
+kernel-deps
+freestnd-c-hdrs-0bsd/
+build/
+.cache/
+limine/
+include/limine.h

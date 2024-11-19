@@ -1,0 +1,78 @@
+CC := gcc
+AR := ar
+LD := ld
+
+ARCH := x86_64
+
+BUILD   := build
+SRC     := src
+INCLUDE := include
+OUTPUT  := kernel.bin
+
+CFLAGS := \
+	-g -O2 -pipe \
+	-Wall \
+	-Wextra \
+	-std=gnu11 \
+	-nostdinc \
+	-ffreestanding \
+	-fno-stack-protector \
+	-fno-stack-check \
+	-fno-lto \
+	-fno-PIC \
+	-ffunction-sections \
+	-fdata-sections \
+	-m64 \
+	-march=x86-64 \
+	-mno-80387 \
+	-mno-mmx \
+	-mno-sse \
+	-mno-sse2 \
+	-mno-red-zone \
+	-mcmodel=kernel
+NASMFLAGS := -F dwarf -g
+LDFLAGS := -nostdlib -static -z max-page-size=0x1000 -gc-sections -T linker.ld
+
+
+CFILES    := $(shell cd $(SRC) && find -L * -type f -name '*.c' | LC_ALL=C sort)
+NASMFILES := $(shell cd $(SRC) && find -L * -type f -name '*.asm' | LC_ALL=C sort)
+OBJ       := $(addprefix $(BUILD)/,$(CFILES:.c=.c.o) $(NASMFILES:.asm=.asm.o))
+CPPFLAGS  := -I $(SRC) -I $(INCLUDE) \
+    -isystem freestnd-c-hdrs-0bsd \
+    -MMD \
+    -MP
+
+HEADER_DEPS := $(addprefix $(BUILD)/,$(CFILES:.c=.c.d))
+
+-include $(HEADER_DEPS)
+
+.PHONY: all clean distclean
+
+all: $(BUILD)/$(OUTPUT)
+
+$(BUILD)/cc-runtime/cc-runtime.a: $(BUILD)/cc-runtime-old/*
+	rm -rf $(BUILD)/cc-runtime
+	cp -r $(BUILD)/cc-runtime-old $(BUILD)/cc-runtime
+	$(MAKE) -C $(BUILD)/cc-runtime -f cc-runtime.mk \
+		CC="$(CC)" \
+		AR="$(AR)" \
+		CFLAGS="$(CFLAGS)" \
+		CPPFLAGS='-isystem ../../freestnd-c-hdrs-0bsd -DCC_RUNTIME_NO_FLOAT'
+
+$(BUILD)/$(OUTPUT): Makefile linker.ld $(OBJ) $(BUILD)/cc-runtime/cc-runtime.a
+	mkdir -p "$$(dirname $@)"
+	$(LD) $(OBJ) $(BUILD)/cc-runtime/cc-runtime.a $(LDFLAGS) -o $@
+
+$(BUILD)/%.c.o: $(SRC)/%.c
+	mkdir -p "$$(dirname $@)"
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+
+$(BUILD)/%.asm.o: src/%.asm
+	mkdir -p "$$(dirname $@)"
+	nasm $(NASMFLAGS) $< -o $@
+
+clean:
+	rm -rf $(BUILD)/kernel.bin $(BUILD)/iso_root $(BUILD)/kernel.bin.iso init/
+
+distclean:
+	rm -rf bin-* obj-* freestnd-c-hdrs-0bsd cc-runtime* $(INCLUDE)/limine.h
