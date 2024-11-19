@@ -73,12 +73,7 @@ void kmain()
         hcf();
     }
 
-    // Ensure we got a framebuffer.
-    
-
-    // Fetch the first framebuffer.
     sys_draw(0, 0, 100, 100, SYS_COLOR(255, 0, 0));
 
-    // We're done, just hang...
     hcf();
 }

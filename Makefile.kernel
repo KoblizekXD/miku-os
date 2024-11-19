@@ -35,6 +35,7 @@ LDFLAGS := -nostdlib -static -z max-page-size=0x1000 -gc-sections -T linker.ld
 
 
 CFILES    := $(shell cd $(SRC) && find -L * -type f -name '*.c' | LC_ALL=C sort)
+RESFILES  := $(addprefix res/,$(shell cd res/ && find -L * -type f -name '*.o' | LC_ALL=C sort))
 NASMFILES := $(shell cd $(SRC) && find -L * -type f -name '*.asm' | LC_ALL=C sort)
 OBJ       := $(addprefix $(BUILD)/,$(CFILES:.c=.c.o) $(NASMFILES:.asm=.asm.o))
 CPPFLAGS  := -I $(SRC) -I $(INCLUDE) \
@@ -61,7 +62,7 @@ $(BUILD)/cc-runtime/cc-runtime.a: $(BUILD)/cc-runtime-old/*
 
 $(BUILD)/$(OUTPUT): Makefile linker.ld $(OBJ) $(BUILD)/cc-runtime/cc-runtime.a
 	mkdir -p "$$(dirname $@)"
-	$(LD) $(OBJ) $(BUILD)/cc-runtime/cc-runtime.a $(LDFLAGS) -o $@
+	$(LD) $(RESFILES) $(OBJ) $(BUILD)/cc-runtime/cc-runtime.a $(LDFLAGS) -o $@
 
 $(BUILD)/%.c.o: $(SRC)/%.c
 	mkdir -p "$$(dirname $@)"
