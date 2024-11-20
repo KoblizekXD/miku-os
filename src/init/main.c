@@ -23,6 +23,8 @@ struct InterruptDescriptor64 {
    uint32_t zero;            // reserved
 } __attribute__((packed));
 
+extern void _gdt_init();
+
 void kload_idt()
 {
     // asm("lidt %0" : : "m"(0L));
@@ -33,6 +35,8 @@ void kmain()
     if (LIMINE_BASE_REVISION_SUPPORTED == false) {
         hcf();
     }
+
+    _gdt_init();
     _sys_csl_init();
 
     sys_puts("[Miku OS] Initializing...\nHi");
