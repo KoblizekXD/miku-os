@@ -73,6 +73,7 @@ void kmain()
         hcf();
     }
     _sys_csl_init();
+    sys_putc('A');
 //    sys_draw(0, 0, 100, 100, SYS_COLOR(255, 0, 0));
 
     hcf();
