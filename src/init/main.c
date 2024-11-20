@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <limine.h>
 #include <util/sysutil.h>
+#include <drivers/serial.h>
 #include <drivers/csl_drv.h>
 
 __attribute__((used, section(".limine_requests")))
@@ -20,6 +21,8 @@ void kmain()
     _sys_csl_init();
 
     sys_puts("[Miku OS] Initializing...\nHi");
+    outb(0x3F8, 'A');
+
 
     hcf();
 }
