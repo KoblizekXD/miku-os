@@ -65,16 +65,14 @@ int memcmp(const void *s1, const void *s2, size_t n) {
     return 0;
 }
 
-// Halt and catch fire function.
-
 void kmain()
 {
     if (LIMINE_BASE_REVISION_SUPPORTED == false) {
         hcf();
     }
     _sys_csl_init();
-    sys_putc('A');
-//    sys_draw(0, 0, 100, 100, SYS_COLOR(255, 0, 0));
+
+    sys_puts("[Miku OS] Initializing...\nHi");
 
     hcf();
 }

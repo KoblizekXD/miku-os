@@ -29,6 +29,7 @@ typedef struct {
 
 void _sys_csl_init();
 void sys_draw(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint64_t color);
-void sys_putc(char c);
+void sys_putchar(char c);
+void sys_puts(const char *string);
 
 #endif
