@@ -7,7 +7,7 @@
 typedef struct _gdt_descriptor {
     uint16_t size;
     uint64_t offset;
-} gdt_t;
+} __attribute__((packed)) gdt_t;
 
 typedef struct _gdt_entry {
     // Limit and base address
@@ -36,7 +36,7 @@ typedef struct _gdt_entry {
     uint32_t reserved;            // Reserved, must be zero
 } __attribute__((packed)) gdt_entry_t;
 
-void lgdt(gdt_t *table);
+void lgdt(gdt_t table);
 gdt_t get_table(gdt_entry_t *entries, size_t size);
 
 #endif

@@ -1,4 +1,6 @@
 #include <drivers/serial.h>
+#include <stddef.h>
+#include <util/memio.h>
 #include <stdint.h>
 
 void outb(uint16_t port, uint8_t c)
@@ -18,4 +20,10 @@ uint8_t inb(uint16_t port)
         : "=a"(value) : "Nd"(port)
     );
     return value;
+}
+
+void outs(uint16_t port, const char *string)
+{
+    for (size_t i = 0; i < strlen(string); i++)
+        outb(port, string[i]);
 }

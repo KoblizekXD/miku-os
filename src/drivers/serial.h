@@ -9,6 +9,7 @@
 #define COM4 0x2E8
 
 void outb(uint16_t port, uint8_t c);
+void outs(uint16_t port, const char* string);
 uint8_t inb(uint16_t port);
 
 #endif

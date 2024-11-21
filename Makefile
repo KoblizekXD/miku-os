@@ -31,8 +31,8 @@ CFLAGS := \
 	-mno-sse2 \
 	-mno-red-zone \
 	-mcmodel=kernel
-NASMFLAGS := -F dwarf -g
-LDFLAGS := -nostdlib -static -z max-page-size=0x1000 -gc-sections -T linker.ld
+NASMFLAGS := -F dwarf -g -Wall -f elf64
+LDFLAGS := -nostdlib -static -z max-page-size=0x1000 -gc-sections -T linker.ld -m elf_x86_64
 
 
 CFILES    := $(shell cd $(SRC) && find -L * -type f -name '*.c' | LC_ALL=C sort)
