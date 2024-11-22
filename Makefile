@@ -58,7 +58,11 @@ run-hdd: run-hdd-$(ARCH)
 run-debug: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
 	qemu-system-$(ARCH) \
 		-s \
+		-S \
+		-d int \
+		-D out.log \
 		-M q35 \
+		-serial file:serial.txt \
 		-drive if=pflash,unit=0,format=raw,file=ovmf/ovmf-code-$(ARCH).fd,readonly=on \
 		-cdrom $(IMAGE_NAME).iso \
 		-m 2G

@@ -8,7 +8,7 @@ void lidt(idt_t idt)
 idt_t get_idt_table(idt_entry_t *entries, size_t size)
 {
     return (idt_t) {
-        .size = size,
+        .size = size * sizeof(idt_entry_t) - 1,
         .offset = (uint64_t)(uintptr_t)entries
     };
 

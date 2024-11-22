@@ -1,96 +1,104 @@
+#include <stddef.h>
 #include <stdint.h>
 #include <util/gdtutil.h>
 #include <util/idtutil.h>
+#include <util/sysutil.h>
 #include <drivers/serial.h>
 
-void _ring_3_init(gdt_entry_t *ring3_data, gdt_entry_t *ring3_code)
+void _ring_3_init(gdt_entry_t *ring3_code, gdt_entry_t *ring3_data)
 {
-    ring3_code->limit_low = 0xFFFF;
+    ring3_code->limit = 0xFFFF;
     ring3_code->base_low = 0;
-    ring3_code->accessed = 0;
-    ring3_code->readable = 1; // since this is a code segment, specifies that the segment is readable
-    ring3_code->conforming = 0;
-    ring3_code->executable = 1;
-    ring3_code->descriptor_type = 1;
-    ring3_code->privilege_level = 3; // ring 3
-    ring3_code->present = 1;
-    ring3_code->limit_high = 0xF;
-    ring3_code->available = 1;
-    ring3_code->long_mode = 0;
-    ring3_code->default_operation_size = 1; // it's 32 bits
-    ring3_code->granularity = 1; // 4KB page addressing
-    ring3_code->base_high = 0;
+    ring3_code->base_mid = 0;
+    ring3_code->access = 0b11111010;
+    ring3_code->granularity = 0b00100000;
+    ring3_code->base_hi = 0;
 
-    *ring3_data = *ring3_code; // contents are similar so save time by copying
-    ring3_data->executable = 0; // not code but data
+    *ring3_data = *ring3_code;
+    ring3_data->access = 0b11110010;
 }
 
-__attribute__((interrupt)) void gpf_handler(void* frame)
+__attribute__((interrupt)) void _handler(void* frame)
 {
-    outs(COM1, "Error");
+    outs(COM1, "Division by zero error.\n\r");
+    hcf();
 }
+
+idt_entry_t idt_entries[256];
+idt_t idt;
+gdt_entry_t entries[10];
+gdt_t gdt;
 
 void _gdt_init()
 {
-    static gdt_entry_t entries[6];    
-
+    // Defined as per https://github.com/limine-bootloader/limine/blob/0e44051ce51457744e5bf7ca7e7c5a7583183fe1/common/sys/gdt.s2.c#L8
+    entries[0] = (gdt_entry_t) {0};
     entries[1] = (gdt_entry_t) {
-        .limit_low = 0x0,
-        .base_low  = 0x0,
-        .accessed  = 0x1,
-        .readable = 0x1,
-        .conforming = 0x0,
-        .executable = 0x1,
-        .descriptor_type = 0x1,
-        .privilege_level = 0x0,
-        .present = 0x1,
-        .limit_high = 0x0,
-        .long_mode = 0x1,
-        .default_operation_size = 0x0,
-        .granularity = 0x1,
-        .base_high = 0x00
+        .limit       = 0xffff,
+        .base_low    = 0x0000,
+        .base_mid    = 0x00,
+        .access      = 0b10011011,
+        .granularity = 0b00000000,
+        .base_hi     = 0x00
     };
-
     entries[2] = (gdt_entry_t) {
-        .limit_low = 0x0,
-        .base_low = 0x0,
-        .accessed = 0x1,
-        .readable = 0x1,
-        .conforming = 0x0,
-        .executable = 0x0,
-        .descriptor_type = 0x1,
-        .privilege_level = 0x0,
-        .present = 0x1,
-        .limit_high = 0x0,
-        .long_mode = 0x1,
-        .default_operation_size = 0x1,
-        .granularity = 0x0,
-        .base_high = 0x00
+        .limit       = 0xffff,
+        .base_low    = 0x0000,
+        .base_mid    = 0x00,
+        .access      = 0b10010011,
+        .granularity = 0b00000000,
+        .base_hi     = 0x00
+    };
+    entries[3] = (gdt_entry_t) {
+        .limit       = 0xffff,
+        .base_low    = 0x0000,
+        .base_mid    = 0x00,
+        .access      = 0b10011011,
+        .granularity = 0b11001111,
+        .base_hi     = 0x00
+    };
+    entries[4] = (gdt_entry_t) {
+        .limit       = 0xffff,
+        .base_low    = 0x0000,
+        .base_mid    = 0x00,
+        .access      = 0b10010011,
+        .granularity = 0b11001111,
+        .base_hi     = 0x00
+    };
+    entries[5] = (gdt_entry_t) {
+        .limit       = 0x0000,
+        .base_low    = 0x0000,
+        .base_mid    = 0x00,
+        .access      = 0b10011011,
+        .granularity = 0b00100000,
+        .base_hi     = 0x00
+    };
+    entries[6] = (gdt_entry_t) {
+        .limit       = 0x0000,
+        .base_low    = 0x0000,
+        .base_mid    = 0x00,
+        .access      = 0b10010011,
+        .granularity = 0b00000000,
+        .base_hi     = 0x00
     };
 
-    _ring_3_init(&entries[4], &entries[3]);
-    gdt_t table = get_table(entries, 6);
-
-    idt_entry_t idt_entries[256];
+    _ring_3_init(&entries[7], &entries[8]); // todo: add the tss
+    gdt = get_table(entries, 9);
+    lgdt(gdt);
     
-    uint64_t pGpf_handler = (uint64_t) (uintptr_t) gpf_handler;
+    uint64_t pHandler = (uint64_t) (uintptr_t) _handler;
 
     idt_entries[0] = (idt_entry_t) {
-        .offset_low = pGpf_handler & 0xFFFF,
-        .segment_s  = 0x08,
-        .ist = 0x0,
-        .reserved = 0x0,
-        .gate = 0xE,
-        .zero = 0x0,
-        .dpl = 0x0,
-        .present = 0x1,
-        .offset_mid = (pGpf_handler >> 16) & 0xFFFF,
-        .offset_high = (pGpf_handler >> 32) & 0xFFFFFFFF,
-        .reserved_high = 0x0
+        .offset_1 = pHandler & 0xFFFF,
+        .selector = 0x28,
+        .ist = 0,
+        .type_attributes = 0x8E,
+        .offset_2 = (pHandler >> 16) & 0xFFFF,
+        .offset_3 = (pHandler >> 32) & 0xFFFFFFFF,
+        .zero = 0
     };
 
-    idt_t idt_table = get_idt_table(idt_entries, 256);
+    idt = get_idt_table(idt_entries, 256);
     
-    lgdt(table);
-    lidt(idt_table);
+    lidt(idt);
 }
