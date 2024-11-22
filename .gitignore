@@ -4,6 +4,7 @@ kernel-deps
 freestnd-c-hdrs-0bsd/
 build/
 .cache/
+logs/
 limine/
 include/limine.h
 *.bin

@@ -60,9 +60,9 @@ run-debug: ovmf/ovmf-code-$(ARCH).fd $(IMAGE_NAME).iso
 		-s \
 		-S \
 		-d int \
-		-D out.log \
+		-D logs/out.log \
 		-M q35 \
-		-serial file:serial.txt \
+		-serial file:logs/serial.txt \
 		-drive if=pflash,unit=0,format=raw,file=ovmf/ovmf-code-$(ARCH).fd,readonly=on \
 		-cdrom $(IMAGE_NAME).iso \
 		-m 2G

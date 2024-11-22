@@ -20,14 +20,10 @@ void kmain()
     if (LIMINE_BASE_REVISION_SUPPORTED == false) {
         hcf();
     }
-
+     _sys_csl_init();
     _gdt_init();
-    _sys_csl_init();
-    
-    volatile char x = 0; x /= x;
 
     sys_puts("[Miku OS] Initializing...\nHi");
-    // outb(0x3F8, 'A');
 
     hcf();
 }
